@@ -1,0 +1,23 @@
+{
+  "name": "service-todo",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "deploy": "npx sls deploy --verbose"
+  },
+  "dependencies": {
+    "serverless-http": "^2.7.0"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.1068.0",
+    "standard": "^16.0.4"
+  },
+  "standard": {
+    "env": [
+      "jest"
+    ],
+    "ignore": [
+      "**/*.ts"
+    ]
+  }
+}
