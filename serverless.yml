@@ -2,7 +2,8 @@ service: service-todo
 frameworkVersion: '2 || 3'
 
 custom:
-  tableName: 'todo-${sls:stage}'
+  todoTable: 'todo-${sls:stage}'
+  eventLogTable: 'todo-event-log-${sls:stage}'
 
 provider:
   name: aws
@@ -22,8 +23,15 @@ provider:
             - dynamodb:DeleteItem
           Resource:
             - !GetAtt TodosTable.Arn
+            - !GetAtt TodoEventLogTable.Arn
+        - Effect: Allow
+          Action:
+            - sns:*
+          Resource:
+            - !GetAtt TodosTopic.Arn
   environment:
-    TABLE_NAME: ${self:custom.tableName}
+    TODOS_TABLE: ${self:custom.todoTable}
+    TODOS_EVENT_LOG_TABLE: ${self:custom.eventLogTable}
 
 functions:
   addTodo:
@@ -32,6 +40,12 @@ functions:
       - httpApi:
           method: POST
           path: /todos
+
+  onTodoCreated:
+    handler: src/onTodoCreated.handler
+    events:
+      - sns:
+          topic: !GetAtt TodoCreatedEvent.Arn
 
   getTodos:
     handler: src/getTodos.handler
@@ -76,4 +90,50 @@ resources:
           - AttributeName: id
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
-        TableName: ${self:custom.tableName}
+        TableName: ${self:custom.todoTable}
+
+    TodoEventLogTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: entityId
+            AttributeType: S
+          - AttributeName: event
+            AttributeType: S
+          - AttributeName: header # should include timestamp or revision number for ordering
+            AttributeType: M
+          - AttributeName: payload
+            AttributeType: M
+        KeySchema:
+          - AttributeName: entityId
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.eventLogTable}
+
+    CreateTodoEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: create-todo
+        DisplayName: Create Todo
+
+    TodoCreatedEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: todo-created
+        DisplayName: Todo Created
+
+    MarkTodoCompleteEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: mark-todo-complete
+        DisplayName: Create Todo
+
+    TodoCompletedEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: todo-completed
+        DisplayName: Create Todo
+
+
+
+

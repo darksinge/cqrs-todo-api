@@ -5,7 +5,7 @@
 const AWS = require('aws-sdk')
 const ddb = new AWS.DynamoDB.DocumentClient()
 
-const { TABLE_NAME } = process.env
+const { TODOS_TABLE } = process.env
 
 // Adds a todo to the database
 exports.handler = async (event) => {
@@ -14,7 +14,7 @@ exports.handler = async (event) => {
   todo.id = todo.id.toString()
 
   await ddb.put({
-    TableName: TABLE_NAME,
+    TableName: TODOS_TABLE,
     Item: todo
   }).promise()
 

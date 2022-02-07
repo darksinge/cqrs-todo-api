@@ -1,12 +1,12 @@
 const AWS = require('aws-sdk')
 const ddb = new AWS.DynamoDB.DocumentClient()
 
-const { TABLE_NAME } = process.env
+const { TODOS_TABLE } = process.env
 
 // Gets all todos from dynamodb
 exports.handler = async (event) => {
   const data = await ddb.scan({
-    TableName: TABLE_NAME,
+    TableName: TODOS_TABLE,
     Select: 'ALL_ATTRIBUTES'
   }).promise()
 

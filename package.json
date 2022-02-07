@@ -3,9 +3,15 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "deploy": "npx sls deploy --verbose"
+    "deploy": "npx sls deploy --verbose",
+    "migrate:latest": "npx knex migrate:latest --knexfile ./src/db/config/knexfile.js --env local",
+    "migrate:make": "npx knex migrate:make --knexfile ./src/db/config/knexfile.js --env local"
   },
   "dependencies": {
+    "dotenv": "^16.0.0",
+    "knex": "^1.0.2",
+    "luxon": "^2.3.0",
+    "mysql2": "^2.3.3",
     "serverless-http": "^2.7.0"
   },
   "devDependencies": {

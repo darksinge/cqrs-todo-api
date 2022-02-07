@@ -1,25 +1,58 @@
 /**
  * @typedef {import('../types').Todo} Todo
+ * @typedef {import('aws-lambda').SNSEvent} SNSEvent
+ * @typedef {import('aws-lambda').SNSEventRecord} SNSEventRecord
+ * @typedef {import('aws-lambda').APIGatewayEvent} APIGatewayEvent
  */
 
-const AWS = require('aws-sdk')
-const ddb = new AWS.DynamoDB.DocumentClient()
+import { DateTime } from 'luxon'
+const knex = require('./db').connect()
 
-const { TABLE_NAME } = process.env
+const todoCreatedEventFromAggregate = ({ aggregateId, payload }) => {
+  return {
+    aggregateId,
+    event: 'TodoCreated',
+    eventVersion: 1,
+    header: {
+      revision: 0,
+      source: 'service-todos',
+      region: 'us-east-1',
+      time: DateTime.now().toUTC().toISO(),
+      traceId: aggregateId // Wouldn't actually do this in production
+    },
+    payload
+  }
+}
 
-// Adds a todo to the database
-exports.handler = async (event) => {
+/**
+ * Adds a todo to the database
+ * @param {SNSEvent|APIGatewayEvent} event_
+ */
+exports.handler = async (event_) => {
+  console.log('EVENT:', JSON.stringify(event_, null, 2))
   /** @type {Todo} */
-  const todo = JSON.parse(event.body)
+  const todo = JSON.parse(event_.body)
   todo.id = todo.id.toString()
 
-  await ddb.put({
-    TableName: TABLE_NAME,
-    Item: todo
-  }).promise()
+  const todoCreatedEvent = todoCreatedEventFromAggregate({
+    aggregateId: todo.id,
+    payload: {
+      initialState: todo
+    }
+  })
+
+  const { aggregateId, event, eventVersion, header, payload } = todoCreatedEvent
+  await knex('todos')
+    .insert({
+      aggregateId,
+      event,
+      eventVersion,
+      header,
+      payload
+    })
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ todo })
+    body: JSON.stringify({ event: todoCreatedEvent })
   }
 }

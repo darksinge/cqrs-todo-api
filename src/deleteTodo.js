@@ -5,12 +5,12 @@
 const AWS = require('aws-sdk')
 const ddb = new AWS.DynamoDB.DocumentClient()
 
-const { TABLE_NAME } = process.env
+const { TODOS_TABLE } = process.env
 
 // Delete the todo from dynamodb by id
 exports.handler = async (event) => {
   const data = await ddb.delete({
-    TableName: TABLE_NAME,
+    TableName: TODOS_TABLE,
     Key: {
       id: event.pathParameters.id
     }

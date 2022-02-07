@@ -1,10 +1,10 @@
 const AWS = require('aws-sdk')
 const ddb = new AWS.DynamoDB.DocumentClient()
-const { TABLE_NAME } = process.env
+const { TODOS_TABLE } = process.env
 
 exports.handlers = async (event) => {
   const data = await ddb.get({
-    TableName: TABLE_NAME,
+    TableName: TODOS_TABLE,
     Key: {
       id: event.pathParameters.id
     }
