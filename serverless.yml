@@ -3,13 +3,14 @@ frameworkVersion: '2 || 3'
 
 custom:
   todoTable: 'todo-${sls:stage}'
-  eventLogTable: 'todo-event-log-${sls:stage}'
+  eventLogTable: 'todos'
 
 provider:
   name: aws
   region: 'us-east-1'
   runtime: nodejs14.x
   lambdaHashingVersion: '20201221'
+  versionFunctions: false
   iam:
     role:
       statements:
@@ -23,19 +24,26 @@ provider:
             - dynamodb:DeleteItem
           Resource:
             - !GetAtt TodosTable.Arn
-            - !GetAtt TodoEventLogTable.Arn
         - Effect: Allow
           Action:
             - sns:*
           Resource:
-            - !GetAtt TodosTopic.Arn
+            - !Ref TodoCreatedEvent
+            - !Ref TodoCompletedEvent
+            
   environment:
     TODOS_TABLE: ${self:custom.todoTable}
     TODOS_EVENT_LOG_TABLE: ${self:custom.eventLogTable}
+    DB_HOST: todo-db.dev-byub.org
+    DB_USER: ${ssm:/${self:service}/db/user}
+    DB_PASS: ${ssm:/${self:service}/db/pass~true}
+    DB_NAME: todos
 
 functions:
   addTodo:
     handler: src/addTodo.handler
+    environment:
+     TODO_CREATED_TOPIC: !Ref TodoCreatedEvent 
     events:
       - httpApi:
           method: POST
@@ -45,7 +53,8 @@ functions:
     handler: src/onTodoCreated.handler
     events:
       - sns:
-          topic: !GetAtt TodoCreatedEvent.Arn
+          arn: !Ref TodoCreatedEvent
+          topicName: todo-created
 
   getTodos:
     handler: src/getTodos.handler
@@ -92,48 +101,14 @@ resources:
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.todoTable}
 
-    TodoEventLogTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        AttributeDefinitions:
-          - AttributeName: entityId
-            AttributeType: S
-          - AttributeName: event
-            AttributeType: S
-          - AttributeName: header # should include timestamp or revision number for ordering
-            AttributeType: M
-          - AttributeName: payload
-            AttributeType: M
-        KeySchema:
-          - AttributeName: entityId
-            KeyType: HASH
-        BillingMode: PAY_PER_REQUEST
-        TableName: ${self:custom.eventLogTable}
-
-    CreateTodoEvent:
-      Type: AWS::SNS::Topic
-      Properties:
-        TopicName: create-todo
-        DisplayName: Create Todo
-
     TodoCreatedEvent:
       Type: AWS::SNS::Topic
       Properties:
         TopicName: todo-created
         DisplayName: Todo Created
 
-    MarkTodoCompleteEvent:
-      Type: AWS::SNS::Topic
-      Properties:
-        TopicName: mark-todo-complete
-        DisplayName: Create Todo
-
     TodoCompletedEvent:
       Type: AWS::SNS::Topic
       Properties:
         TopicName: todo-completed
         DisplayName: Create Todo
-
-
-
-

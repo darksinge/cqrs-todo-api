@@ -1,12 +1,15 @@
 /**
  * @typedef {import('../types').Todo} Todo
- * @typedef {import('aws-lambda').SNSEvent} SNSEvent
- * @typedef {import('aws-lambda').SNSEventRecord} SNSEventRecord
  * @typedef {import('aws-lambda').APIGatewayEvent} APIGatewayEvent
  */
 
-import { DateTime } from 'luxon'
+const AWS = require('aws-sdk')
+const { DateTime } = require('luxon')
 const knex = require('./db').connect()
+
+const TODO_CREATED_TOPIC = process.env.TODO_CREATED_TOPIC
+
+const sns = new AWS.SNS()
 
 const todoCreatedEventFromAggregate = ({ aggregateId, payload }) => {
   return {
@@ -26,7 +29,7 @@ const todoCreatedEventFromAggregate = ({ aggregateId, payload }) => {
 
 /**
  * Adds a todo to the database
- * @param {SNSEvent|APIGatewayEvent} event_
+ * @param {APIGatewayEvent} event_
  */
 exports.handler = async (event_) => {
   console.log('EVENT:', JSON.stringify(event_, null, 2))
@@ -50,6 +53,11 @@ exports.handler = async (event_) => {
       header,
       payload
     })
+
+  await sns.publish({
+    TopicArn: TODO_CREATED_TOPIC,
+    Message: JSON.stringify(todoCreatedEvent)
+  }).promise()
 
   return {
     statusCode: 200,

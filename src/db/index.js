@@ -1,4 +1,4 @@
 const Knex = require('knex')
 const config = require('./config/knexfile')
 
-exports.connect = () => Knex(config)
+exports.connect = () => Knex(config.fromEnv)
