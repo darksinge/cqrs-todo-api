@@ -112,3 +112,9 @@ resources:
       Properties:
         TopicName: todo-completed
         DisplayName: Create Todo
+
+    TodoPriorityChangedEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: todo-priority-changed
+        DisplayName: Todo Priority Changed

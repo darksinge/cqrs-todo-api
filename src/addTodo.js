@@ -6,6 +6,7 @@
 const AWS = require('aws-sdk')
 const { DateTime } = require('luxon')
 const knex = require('./db').connect()
+const { Events } = require('./events')
 
 const TODO_CREATED_TOPIC = process.env.TODO_CREATED_TOPIC
 
@@ -14,7 +15,7 @@ const sns = new AWS.SNS()
 const todoCreatedEventFromAggregate = ({ aggregateId, payload }) => {
   return {
     aggregateId,
-    event: 'TodoCreated',
+    event: Events.TodoCreated,
     eventVersion: 1,
     header: {
       revision: 0,
