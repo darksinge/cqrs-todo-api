@@ -8,19 +8,19 @@ const { DateTime } = require('luxon')
 const { Events } = require('./events')
 
 const sns = new AWS.SNS()
-const TODO_DELETED_TOPIC = process.env.TODO_DELETED_TOPIC
+const TODO_ARCHIVED_EVENT = process.env.TODO_ARCHIVED_EVENT
 
-const todoDeletedEvent = ({ aggregateId, revision }) => {
+const todoArchivedEvent = ({ aggregateId, revision }) => {
   return {
     aggregateId,
-    event: Events.TodoDeleted,
+    event: Events.TodoArchived,
     eventVersion: 1,
     header: {
       source: 'service-todos',
       revision,
       region: 'us-east-1',
       time: DateTime.now().toUTC().toISO(),
-      topicArn: TODO_DELETED_TOPIC,
+      topicArn: TODO_ARCHIVED_EVENT,
       traceId: aggregateId // Wouldn't actually do this in production
     },
     payload: {
@@ -37,17 +37,17 @@ exports.handler = async (event) => {
     .count('* as revision')
     .where('aggregateId', '=', aggregateId)
 
-  const deleteEvent = todoDeletedEvent({ aggregateId, revision: +revision + 1 })
+  const archiveEvent = todoArchivedEvent({ aggregateId, revision: +revision + 1 })
   await knex('todos')
-    .insert(deleteEvent)
+    .insert(archiveEvent)
 
   await sns.publish({
-    TopicArn: TODO_DELETED_TOPIC,
-    Message: JSON.stringify(deleteEvent)
+    TopicArn: TODO_ARCHIVED_EVENT,
+    Message: JSON.stringify(archiveEvent)
   }).promise()
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ message: 'OK' })
+    body: JSON.stringify({ event: archiveEvent })
   }
 }

@@ -31,6 +31,7 @@ provider:
             - !Ref TodoCreatedEvent
             - !Ref TodoCompletedEvent
             - !Ref TodoDeletedEvent
+            - !Ref TodoArchivedEvent
         - Effect: Allow
           Action:
             - sqs:*
@@ -85,6 +86,25 @@ functions:
       - httpApi:
           method: POST
           path: /todos/{id}
+
+  archiveTodo:
+    handler: src/archiveTodo.handler
+    environment:
+      TODO_ARCHIVED_EVENT: !Ref TodoArchivedEvent
+    events:
+      - httpApi:
+          method: GET
+          path: /todos/{id}/archive
+      - httpApi:
+          method: PUT
+          path: /todos/{id}/archive
+
+  onTodoArchived:
+    handler: src/onTodoArchived.handler
+    events:
+      - sns:
+          arn: !Ref TodoArchivedEvent
+          topicName: todo-archived
 
   deleteTodo:
     handler: src/deleteTodo.handler
@@ -150,6 +170,12 @@ resources:
       Properties:
         TopicName: todo-priority-changed
         DisplayName: Todo Priority Changed
+
+    TodoArchivedEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: todo-archived
+        DisplayName: Todo Archived
 
     RebuildStoreQueue:
       Type: AWS::SQS::Queue

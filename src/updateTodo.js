@@ -13,9 +13,17 @@ exports.handler = async (event) => {
   const todo = JSON.parse(event.body)
   todo.id = todo.id.toString()
 
+  const { Item: item = {} } = await ddb.get({
+    TableName: TODOS_TABLE,
+    Key: { id: todo.id }
+  }).promise()
+
   await ddb.put({
     TableName: TODOS_TABLE,
-    Item: todo
+    Item: {
+      ...item,
+      ...todo
+    }
   }).promise()
 
   return {

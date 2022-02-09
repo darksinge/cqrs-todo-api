@@ -69,6 +69,8 @@ exports.rebuildFromEventQueue = async event => {
   const events = event.Records.map(record => record.body)
     .map(body => JSON.parse(body))
 
+  const receiptHandles = event.Records.map(record => record.receiptHandle)
+
   console.log('TODO EVENTS:', JSON.stringify(event, null, 2))
 
   await Promise.all(
@@ -87,4 +89,11 @@ exports.rebuildFromEventQueue = async event => {
           .promise()
       )
   )
+
+  for (const handle of receiptHandles) {
+    await sqs.deleteMessage({
+      QueueUrl: SQS_QUEUE_URL,
+      ReceiptHandle: handle
+    }).promise()
+  }
 }

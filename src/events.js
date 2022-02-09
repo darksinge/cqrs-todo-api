@@ -1,8 +1,8 @@
 exports.Events = {
   TodoCreated: 'TodoCreated',
   TodoDeleted: 'TodoDeleted',
-  TodoArchived: 'TodoDeleted',
-  TodoUnarchived: 'TodoDeleted',
-  TodoRePrioritized: 'TodoDeleted',
-  TodoCompleted: 'TodoDeleted'
+  TodoArchived: 'TodoArchived',
+  TodoUnarchived: 'TodoUnarchived',
+  TodoRePrioritized: 'TodoRePrioritized',
+  TodoCompleted: 'TodoCompleted'
 }
