@@ -18,7 +18,7 @@ const todoUpdatedEvent = ({ aggregateId, payload, revision }) => {
     event: Events.TodoUpdated,
     eventVersion: 1,
     header: {
-      revision: 0,
+      revision,
       source: 'service-todos',
       region: 'us-east-1',
       time: DateTime.now().toUTC().toISO(),
@@ -36,15 +36,16 @@ const todoUpdatedEvent = ({ aggregateId, payload, revision }) => {
 exports.handler = async (event_) => {
   console.log('EVENT:', JSON.stringify(event_, null, 2))
   /** @type {Todo} */
+  const aggregateId = event_.pathParameters.id
   const todo = JSON.parse(event_.body)
   todo.id = todo.id.toString()
 
   const [{ revision }] = await knex('todos')
     .count('* as revision')
-    .where('aggregateId', '=', todo.id)
+    .where('aggregateId', '=', aggregateId)
 
   const updateEvent = todoUpdatedEvent({
-    aggregateId: todo.id,
+    aggregateId,
     revision: revision + 1,
     payload: {
       snapshot: todo

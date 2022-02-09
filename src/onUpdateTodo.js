@@ -17,7 +17,7 @@ const onTodoUpdated = async (record) => {
   console.log('event:', JSON.stringify(event))
 
   /** @type {{ state: Todo }} */
-  const { state: todo } = event.payload
+  const { snapshot: todo } = event.payload
   todo.id = todo.id.toString()
 
   const { revision } = event.header
