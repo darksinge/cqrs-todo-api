@@ -33,8 +33,10 @@ exports.handler = async (event) => {
     return notFoundHandler()
   }
 
+  const { revision: _, ...todo } = item
+
   return {
     statusCode: 200,
-    body: JSON.stringify(item)
+    body: JSON.stringify(todo)
   }
 }

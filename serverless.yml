@@ -32,6 +32,7 @@ provider:
             - !Ref TodoCompletedEvent
             - !Ref TodoDeletedEvent
             - !Ref TodoArchivedEvent
+            - !Ref TodoUpdatedEvent
         - Effect: Allow
           Action:
             - sqs:*
@@ -79,6 +80,8 @@ functions:
 
   updateTodo:
     handler: src/updateTodo.handler
+    environment:
+      TODO_UPDATED_TOPIC: !Ref TodoUpdatedEvent
     events:
       - httpApi:
           method: PUT
@@ -86,6 +89,13 @@ functions:
       - httpApi:
           method: POST
           path: /todos/{id}
+
+  onUpdateTodo:
+    handler: src/onUpdateTodo.handler
+    events:
+      - sns:
+          arn: !Ref TodoUpdatedEvent
+          topicName: todo-updated
 
   archiveTodo:
     handler: src/archiveTodo.handler
@@ -152,6 +162,12 @@ resources:
       Properties:
         TopicName: todo-created
         DisplayName: Todo Created
+
+    TodoUpdatedEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: todo-updated
+        DisplayName: Todo Updated
 
     TodoCompletedEvent:
       Type: AWS::SNS::Topic

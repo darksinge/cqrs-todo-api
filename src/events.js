@@ -4,5 +4,6 @@ exports.Events = {
   TodoArchived: 'TodoArchived',
   TodoUnarchived: 'TodoUnarchived',
   TodoRePrioritized: 'TodoRePrioritized',
-  TodoCompleted: 'TodoCompleted'
+  TodoCompleted: 'TodoCompleted',
+  TodoUpdated: 'TodoUpdated'
 }

@@ -18,7 +18,7 @@ const todoCreatedEvent = ({ aggregateId, payload }) => {
     event: Events.TodoCreated,
     eventVersion: 1,
     header: {
-      revision: 0,
+      revision: 1,
       source: 'service-todos',
       region: 'us-east-1',
       time: DateTime.now().toUTC().toISO(),
