@@ -30,6 +30,11 @@ provider:
           Resource:
             - !Ref TodoCreatedEvent
             - !Ref TodoCompletedEvent
+        - Effect: Allow
+          Action:
+            - sqs:*
+          Resource:
+            - !GetAtt RebuildStoreQueue.Arn
             
   environment:
     TODOS_TABLE: ${self:custom.todoTable}
@@ -87,6 +92,24 @@ functions:
           method: DELETE
           path: /todos/{id}
 
+  onDeleteTodo:
+    handler: src/onDeleteTodo.handler
+    events:
+      - sns:
+          arn: !Ref TodoDeletedEvent
+          topicName: todo-deleted
+
+  rebuildStore:
+    handler: src/rebuildStore.rebuildStore
+    environment:
+      SQS_QUEUE_URL: !Ref RebuildStoreQueue
+
+  rebuildStoreFromEventQueue:
+    handler: src/rebuildStore.rebuildFromEventQueue
+    events:
+      - sqs:
+          arn: !GetAtt RebuildStoreQueue.Arn
+
 resources:
   Resources:
     TodosTable:
@@ -113,8 +136,22 @@ resources:
         TopicName: todo-completed
         DisplayName: Create Todo
 
+    TodoDeletedEvent:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: todo-deleted
+        DisplayName: Delete Todo
+
     TodoPriorityChangedEvent:
       Type: AWS::SNS::Topic
       Properties:
         TopicName: todo-priority-changed
         DisplayName: Todo Priority Changed
+
+    RebuildStoreQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: rebuild-store-queue.fifo
+        FifoQueue: true
+        FifoThroughputLimit: perMessageGroupId
+        DeduplicationScope: messageGroup

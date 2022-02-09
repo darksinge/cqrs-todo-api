@@ -10,11 +10,14 @@
   "dependencies": {
     "dotenv": "^16.0.0",
     "knex": "^1.0.2",
+    "lodash": "^4.17.21",
     "luxon": "^2.3.0",
     "mysql2": "^2.3.3",
     "serverless-http": "^2.7.0"
   },
   "devDependencies": {
+    "@types/knex": "^0.16.1",
+    "@types/lodash": "^4.14.178",
     "aws-sdk": "^2.1068.0",
     "standard": "^16.0.4"
   },

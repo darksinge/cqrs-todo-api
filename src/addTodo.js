@@ -12,7 +12,7 @@ const TODO_CREATED_TOPIC = process.env.TODO_CREATED_TOPIC
 
 const sns = new AWS.SNS()
 
-const todoCreatedEventFromAggregate = ({ aggregateId, payload }) => {
+const todoCreatedEvent = ({ aggregateId, payload }) => {
   return {
     aggregateId,
     event: Events.TodoCreated,
@@ -22,6 +22,7 @@ const todoCreatedEventFromAggregate = ({ aggregateId, payload }) => {
       source: 'service-todos',
       region: 'us-east-1',
       time: DateTime.now().toUTC().toISO(),
+      topicArn: TODO_CREATED_TOPIC,
       traceId: aggregateId // Wouldn't actually do this in production
     },
     payload
@@ -38,30 +39,23 @@ exports.handler = async (event_) => {
   const todo = JSON.parse(event_.body)
   todo.id = todo.id.toString()
 
-  const todoCreatedEvent = todoCreatedEventFromAggregate({
+  const createEvent = todoCreatedEvent({
     aggregateId: todo.id,
     payload: {
       initialState: todo
     }
   })
 
-  const { aggregateId, event, eventVersion, header, payload } = todoCreatedEvent
   await knex('todos')
-    .insert({
-      aggregateId,
-      event,
-      eventVersion,
-      header,
-      payload
-    })
+    .insert(createEvent)
 
   await sns.publish({
     TopicArn: TODO_CREATED_TOPIC,
-    Message: JSON.stringify(todoCreatedEvent)
+    Message: JSON.stringify(createEvent)
   }).promise()
 
   return {
     statusCode: 200,
-    body: JSON.stringify({ event: todoCreatedEvent })
+    body: JSON.stringify({ event: createEvent })
   }
 }
