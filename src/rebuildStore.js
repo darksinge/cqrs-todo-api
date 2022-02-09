@@ -50,7 +50,7 @@ exports.rebuildStore = async event => {
       await sqs.sendMessageBatch({
         QueueUrl: SQS_QUEUE_URL,
         Entries: events.map((event, i) => ({
-          Id: event.aggregateId,
+          Id: `${event.aggregateId}-${event.id}`,
           MessageBody: JSON.stringify(event),
           MessageGroupId: groupId,
           MessageDeduplicationId: `${event.aggregateId}-${event.id}`

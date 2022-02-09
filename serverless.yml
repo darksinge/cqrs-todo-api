@@ -30,6 +30,7 @@ provider:
           Resource:
             - !Ref TodoCreatedEvent
             - !Ref TodoCompletedEvent
+            - !Ref TodoDeletedEvent
         - Effect: Allow
           Action:
             - sqs:*
@@ -87,6 +88,8 @@ functions:
 
   deleteTodo:
     handler: src/deleteTodo.handler
+    environment:
+      TODO_DELETED_TOPIC: !Ref TodoDeletedEvent
     events:
       - httpApi:
           method: DELETE
